@@ -75,7 +75,7 @@ public class PlayerControl : MonoBehaviour
 
     private void HandleTouchInput()
     {
-        
+
         if (Touch.activeTouches.Count > 0)
         {
             Touch touch = Touch.activeTouches[0];
@@ -83,7 +83,7 @@ public class PlayerControl : MonoBehaviour
             if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
             {
                 Vector3 touchPosition = touch.screenPosition;
-                touchPosition.z = mainCamera.nearClipPlane; 
+                touchPosition.z = mainCamera.nearClipPlane;
                 Vector3 worldPosition = mainCamera.ScreenToWorldPoint(touchPosition);
                 Vector3 direction = (worldPosition - transform.position).normalized;
                 transform.position += direction * speed * Time.deltaTime;
@@ -99,17 +99,18 @@ public class PlayerControl : MonoBehaviour
 
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        
+
         moveInput = context.ReadValue<Vector2>();
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
-       
+
         moveInput = Vector2.zero;
     }
 
-    private void UpdateAnimationParameters() {
+    private void UpdateAnimationParameters()
+    {
         if (animator != null)
         {
             animator.SetBool("isLeft", moveInput.x < 0 && Mathf.Abs(moveInput.x) > Mathf.Abs(moveInput.y));
@@ -128,20 +129,29 @@ public class PlayerControl : MonoBehaviour
     {
         Debug.Log("Shoot");
 
-    GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
 
-    Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
-    if (rb != null)
+        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = firePoint.up * bulletSpeed; // Fire bullet upwards in 2D space.
+        }
+        else
+        {
+            Debug.LogError("Bullet prefab is missing a Rigidbody2D component!");
+        }
+
+        Destroy(bullet, 2f); // Clean up after 2 seconds.
+    }
+
+
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        rb.velocity = firePoint.up * bulletSpeed; // Fire bullet upwards in 2D space.
+        if (collision.CompareTag("Enemy"))
+        {
+            // GameManager.Instance.AddScore(1);
+            Destroy(collision.gameObject, 0.2f);
+            Destroy(gameObject);
+        }
     }
-    else
-    {
-        Debug.LogError("Bullet prefab is missing a Rigidbody2D component!");
-    }
-
-    Destroy(bullet, 2f); // Clean up after 2 seconds.
-    }
-
-
 }
